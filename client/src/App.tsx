@@ -74,19 +74,6 @@ function App() {
     }
   };
 
-  const handleToggleMarried = async (user: User) => {
-    try {
-      setError(null);
-      const updated = await userApi.updateUser(user.id, {
-        isMarried: !user.isMarried,
-      });
-      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
-    } catch (err) {
-      console.error(err);
-      setError("Failed to update user");
-    }
-  };
-
   // Open modal with user data
   const openEditModal = (user: User) => {
     setEditingUser(user);
@@ -129,7 +116,7 @@ function App() {
     <div className="min-h-screen bg-slate-900 text-slate-100">
       <div className="mx-auto max-w-4xl px-4 py-8">
         <header className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Users</h1>
+          <h1 className="text-3xl font-bold">User Dashboard</h1>
           <button
             onClick={fetchUsers}
             disabled={loading}
@@ -216,12 +203,7 @@ function App() {
                   className="flex flex-col gap-2 py-3 md:flex-row md:items-center md:justify-between"
                 >
                   <div>
-                    <p className="font-medium">
-                      {user.name}{" "}
-                      <span className="text-xs text-slate-400">
-                        (id: {user.id})
-                      </span>
-                    </p>
+                    <p className="font-medium">{user.name} </p>
                     <p className="text-sm text-slate-300">{user.email}</p>
                     <p className="text-xs text-slate-400">
                       Age {user.age} • Sport: {user.sport} • Married:{" "}
@@ -234,12 +216,6 @@ function App() {
                       className="rounded-md bg-sky-600 px-3 py-1 text-xs font-medium text-white hover:bg-sky-500"
                     >
                       Edit
-                    </button>
-                    <button
-                      onClick={() => handleToggleMarried(user)}
-                      className="rounded-md bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-500"
-                    >
-                      Toggle married
                     </button>
                     <button
                       onClick={() => handleDeleteUser(user.id)}
@@ -266,7 +242,7 @@ function App() {
             onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
           >
             <h2 className="mb-4 text-lg font-semibold">
-              Edit user #{editingUser.id}
+              Edit user: {editingUser.name}
             </h2>
 
             <div className="space-y-3">
