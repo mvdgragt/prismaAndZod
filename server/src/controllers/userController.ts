@@ -16,14 +16,32 @@ export const getUsers = async (req: Request, res: Response) => {
   }
 };
 
+export const createUser = async (req: Request, res: Response) => {
+  try {
+    const { name, email, age, isMarried, sport } = req.body;
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        age,
+        isMarried,
+        sport,
+      },
+    });
+    res.status(201).json(newUser);
+  } catch (error) {
+    res
+      .status(500)
+      .send(error instanceof Error ? error.message : "Unknown error");
+  }
+};
+
 export const updateUser = async (req: Request, res: Response) => {
   try {
+    const id = Number(req.params.id);
     const updatedUser = await prisma.user.update({
-      where: { email: "sofia.nyman@sundsgarden.se" },
-      data: {
-        isMarried: true,
-        sport: "cycling",
-      },
+      where: { id },
+      data: req.body,
     });
     res.json(updatedUser);
   } catch (error) {
@@ -33,10 +51,11 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteUsers = async (req: Request, res: Response) => {
+export const deleteUser = async (req: Request, res: Response) => {
   try {
-    const deleted = await prisma.user.deleteMany({
-      where: { age: { gt: 30 } },
+    const id = Number(req.params.id);
+    const deleted = await prisma.user.delete({
+      where: { id },
     });
     res.json(deleted);
   } catch (error) {

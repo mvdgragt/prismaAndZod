@@ -1,53 +1,41 @@
 import { useState, useEffect } from "react";
 import { userApi } from "./types/api/userApi";
-import type { User } from "./types/user";
+import type { User, NewUser } from "./types/user";
+
+type EditUserForm = {
+  name: string;
+  email: string;
+  age: string; // keep as string in the form, convert to number on save
+  isMarried: boolean;
+  sport: string;
+};
 
 function App() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const [newUser, setNewUser] = useState<NewUser>({
+    name: "",
+    email: "",
+    age: 0,
+    isMarried: false,
+    sport: "",
+  });
+
+  // Modal state
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingForm, setEditingForm] = useState<EditUserForm | null>(null);
 
   const fetchUsers = async () => {
-    setLoading(true);
-    setError(null);
     try {
+      setLoading(true);
+      setError(null);
       const data = await userApi.getUsers();
       setUsers(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch users");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdate = async () => {
-    setLoading(true);
-    setError(null);
-    setSuccessMsg(null);
-    try {
-      const updated = await userApi.updateUser();
-      setSuccessMsg(`Updated ${updated.name} successfully!`);
-      await fetchUsers();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update user");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!confirm("Delete all users over 30? This cannot be undone.")) return;
-
-    setLoading(true);
-    setError(null);
-    setSuccessMsg(null);
-    try {
-      const result = await userApi.deleteUsers();
-      setSuccessMsg(`Deleted ${result.count} user(s) successfully!`);
-      await fetchUsers();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete users");
+      console.error(err);
+      setError("Failed to fetch users");
     } finally {
       setLoading(false);
     }
@@ -57,113 +45,304 @@ function App() {
     fetchUsers();
   }, []);
 
+  const handleCreateUser = async () => {
+    try {
+      setError(null);
+      const created = await userApi.createUser(newUser);
+      setUsers((prev) => [...prev, created]);
+      setNewUser({
+        name: "",
+        email: "",
+        age: 0,
+        isMarried: false,
+        sport: "",
+      });
+    } catch (err) {
+      console.error(err);
+      setError("Failed to create user");
+    }
+  };
+
+  const handleDeleteUser = async (id: number) => {
+    try {
+      setError(null);
+      await userApi.deleteUser(id);
+      setUsers((prev) => prev.filter((u) => u.id !== id));
+    } catch (err) {
+      console.error(err);
+      setError("Failed to delete user");
+    }
+  };
+
+  const handleToggleMarried = async (user: User) => {
+    try {
+      setError(null);
+      const updated = await userApi.updateUser(user.id, {
+        isMarried: !user.isMarried,
+      });
+      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+    } catch (err) {
+      console.error(err);
+      setError("Failed to update user");
+    }
+  };
+
+  // Open modal with user data
+  const openEditModal = (user: User) => {
+    setEditingUser(user);
+    setEditingForm({
+      name: user.name,
+      email: user.email,
+      age: String(user.age),
+      isMarried: user.isMarried,
+      sport: user.sport,
+    });
+  };
+
+  const closeEditModal = () => {
+    setEditingUser(null);
+    setEditingForm(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingUser || !editingForm) return;
+
+    try {
+      setError(null);
+      const updated = await userApi.updateUser(editingUser.id, {
+        name: editingForm.name,
+        email: editingForm.email,
+        age: Number(editingForm.age),
+        isMarried: editingForm.isMarried,
+        sport: editingForm.sport,
+      });
+
+      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      closeEditModal();
+    } catch (err) {
+      console.error(err);
+      setError("Failed to update user");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-xl p-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-6">
-            User Management
-          </h1>
+    <div className="min-h-screen bg-slate-900 text-slate-100">
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <header className="mb-6 flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Users</h1>
+          <button
+            onClick={fetchUsers}
+            disabled={loading}
+            className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-sky-500 disabled:opacity-60"
+          >
+            {loading ? "Loading..." : "Refresh users"}
+          </button>
+        </header>
 
-          {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
-              <p className="text-red-700">{error}</p>
-            </div>
-          )}
+        {error && (
+          <div className="mb-4 rounded-md border border-red-500 bg-red-950/40 px-4 py-2 text-sm text-red-200">
+            {error}
+          </div>
+        )}
 
-          {successMsg && (
-            <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
-              <p className="text-green-700">{successMsg}</p>
-            </div>
-          )}
-
-          <div className="flex gap-4 mb-8">
+        {/* Add new user form */}
+        <section className="mb-8 rounded-xl border border-slate-700 bg-slate-800/60 p-4 shadow">
+          <h2 className="mb-3 text-lg font-semibold">Add new user</h2>
+          <div className="grid gap-3 md:grid-cols-2">
+            <input
+              className="rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
+              placeholder="Name"
+              value={newUser.name}
+              onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+            />
+            <input
+              className="rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
+              placeholder="Email"
+              value={newUser.email}
+              onChange={(e) =>
+                setNewUser({ ...newUser, email: e.target.value })
+              }
+            />
+            <input
+              type="number"
+              className="rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
+              placeholder="Age"
+              value={newUser.age || ""} // show placeholder when 0
+              onChange={(e) =>
+                setNewUser({ ...newUser, age: Number(e.target.value) })
+              }
+            />
+            <input
+              className="rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
+              placeholder="Sport"
+              value={newUser.sport}
+              onChange={(e) =>
+                setNewUser({ ...newUser, sport: e.target.value })
+              }
+            />
+            <label className="flex items-center gap-2 text-sm text-slate-200">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-sky-500"
+                checked={newUser.isMarried}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, isMarried: e.target.checked })
+                }
+              />
+              Married
+            </label>
+          </div>
+          <div className="mt-4">
             <button
-              onClick={fetchUsers}
-              disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              onClick={handleCreateUser}
+              className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-emerald-500"
             >
-              Refresh Users
-            </button>
-            <button
-              onClick={handleUpdate}
-              disabled={loading}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Update Sofia
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={loading}
-              className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Delete Users &gt; 30
+              Add user
             </button>
           </div>
+        </section>
 
-          {loading && (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          )}
+        {/* Users list */}
+        <section className="rounded-xl border border-slate-700 bg-slate-800/60 p-4 shadow">
+          <h2 className="mb-3 text-lg font-semibold">Existing users</h2>
 
-          {!loading && users.length === 0 && (
-            <p className="text-gray-500 text-center py-8">
-              No users found (cyclists or swimmers)
-            </p>
-          )}
-
-          {!loading && users.length > 0 && (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b-2 border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
-                      Name
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
-                      Email
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
-                      Age
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
-                      Sport
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
-                      Married
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user) => (
-                    <tr
-                      key={user.id}
-                      className="border-b border-gray-100 hover:bg-gray-50"
+          {users.length === 0 ? (
+            <p className="text-sm text-slate-400">No users yet.</p>
+          ) : (
+            <ul className="divide-y divide-slate-700">
+              {users.map((user) => (
+                <li
+                  key={user.id}
+                  className="flex flex-col gap-2 py-3 md:flex-row md:items-center md:justify-between"
+                >
+                  <div>
+                    <p className="font-medium">
+                      {user.name}{" "}
+                      <span className="text-xs text-slate-400">
+                        (id: {user.id})
+                      </span>
+                    </p>
+                    <p className="text-sm text-slate-300">{user.email}</p>
+                    <p className="text-xs text-slate-400">
+                      Age {user.age} • Sport: {user.sport} • Married:{" "}
+                      {user.isMarried ? "Yes" : "No"}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openEditModal(user)}
+                      className="rounded-md bg-sky-600 px-3 py-1 text-xs font-medium text-white hover:bg-sky-500"
                     >
-                      <td className="py-3 px-4">{user.name}</td>
-                      <td className="py-3 px-4 text-gray-600">{user.email}</td>
-                      <td className="py-3 px-4">{user.age}</td>
-                      <td className="py-3 px-4">
-                        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                          {user.sport}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        {user.isMarried ? (
-                          <span className="text-green-600">✓</span>
-                        ) : (
-                          <span className="text-gray-400">✗</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleToggleMarried(user)}
+                      className="rounded-md bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-500"
+                    >
+                      Toggle married
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(user.id)}
+                      className="rounded-md bg-rose-600 px-3 py-1 text-xs font-medium text-white hover:bg-rose-500"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
-        </div>
+        </section>
       </div>
+
+      {/* Modal */}
+      {editingUser && editingForm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={closeEditModal}
+        >
+          <div
+            className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-800 p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
+          >
+            <h2 className="mb-4 text-lg font-semibold">
+              Edit user #{editingUser.id}
+            </h2>
+
+            <div className="space-y-3">
+              <input
+                className="w-full rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
+                placeholder="Name"
+                value={editingForm.name}
+                onChange={(e) =>
+                  setEditingForm((prev) =>
+                    prev ? { ...prev, name: e.target.value } : prev
+                  )
+                }
+              />
+              <input
+                className="w-full rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
+                placeholder="Email"
+                value={editingForm.email}
+                onChange={(e) =>
+                  setEditingForm((prev) =>
+                    prev ? { ...prev, email: e.target.value } : prev
+                  )
+                }
+              />
+              <input
+                type="number"
+                className="w-full rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
+                placeholder="Age"
+                value={editingForm.age}
+                onChange={(e) =>
+                  setEditingForm((prev) =>
+                    prev ? { ...prev, age: e.target.value } : prev
+                  )
+                }
+              />
+              <input
+                className="w-full rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
+                placeholder="Sport"
+                value={editingForm.sport}
+                onChange={(e) =>
+                  setEditingForm((prev) =>
+                    prev ? { ...prev, sport: e.target.value } : prev
+                  )
+                }
+              />
+              <label className="flex items-center gap-2 text-sm text-slate-200">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-sky-500"
+                  checked={editingForm.isMarried}
+                  onChange={(e) =>
+                    setEditingForm((prev) =>
+                      prev ? { ...prev, isMarried: e.target.checked } : prev
+                    )
+                  }
+                />
+                Married
+              </label>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                onClick={closeEditModal}
+                className="rounded-md border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+              >
+                Save changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
