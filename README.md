@@ -1,216 +1,264 @@
-📘 User Management App
+# 📘 User Management App
 
-A full-stack CRUD application built with React, TailwindCSS, Express, Prisma, and PostgreSQL.
+_A full-stack CRUD application built with React, TailwindCSS, Express, Prisma, and PostgreSQL._
 
-<p align="center"> <img src="https://img.shields.io/badge/React-18-blue?logo=react" /> <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript" /> <img src="https://img.shields.io/badge/TailwindCSS-3-38bdf8?logo=tailwindcss" /> <img src="https://img.shields.io/badge/Express.js-4-black?logo=express" /> <img src="https://img.shields.io/badge/Prisma-ORM-2d3748?logo=prisma" /> <img src="https://img.shields.io/badge/PostgreSQL-15-4169e1?logo=postgresql" /> </p>
-📷 Screenshots
+## ✨ Features
 
-(Replace these images with your own once your UI is finalized.)
+### **Frontend (React + TypeScript + TailwindCSS)**
 
-Users List Edit Modal
+- Fetch and display users
+- Add a new user
+- Edit user via modal (name, email, age, sport, married)
+- Delete individual users
+- Toggle married/unmarried
+- Zod for runtime validation
+- Clean Tailwind UI
 
-✨ Features
-Frontend (React + TypeScript + TailwindCSS)
+### **Backend (Express + Prisma + PostgreSQL)**
 
-Fetch and display users
+- REST API (`/users`)
+- CRUD operations
+- Prisma Client for DB access
+- Schema-driven validation
+- CORS support
+- JSON request parsing
 
-Add a new user
+---
 
-Edit user via modal (name, email, age, sport, married)
+## 🛠️ Tech Stack
 
-Delete individual users
+### **Frontend**
 
-Toggle married/unmarried
+- React (Vite)
+- TypeScript
+- TailwindCSS
+- Zod
+- Fetch API
 
-Zod for runtime validation
+### **Backend**
 
-Clean Tailwind UI
+- Node.js
+- Express
+- Prisma ORM
+- PostgreSQL
+- CORS middleware
+- TypeScript
 
-Backend (Express + Prisma + PostgreSQL)
+---
 
-REST API (/users)
+## 📂 Folder Structure
 
-CRUD operations
-
-Prisma Client for DB access
-
-Schema-driven validation
-
-CORS support
-
-JSON request parsing
-
-🛠️ Tech Stack
-Frontend
-
-React (Vite)
-
-TypeScript
-
-TailwindCSS
-
-Zod
-
-Fetch API
-
-Backend
-
-Node.js
-
-Express
-
-Prisma ORM
-
-PostgreSQL
-
-CORS middleware
-
-TypeScript
-
-📂 Folder Structure
+```
 project/
 │
 ├── backend/
-│ ├── app.ts
-│ ├── server.ts
-│ ├── prisma/
-│ │ ├── schema.prisma
-│ │ └── migrations/
-│ └── src/
-│ ├── routes/
-│ │ └── userRoutes.ts
-│ └── controllers/
-│ └── userController.ts
+│   ├── app.ts
+│   ├── server.ts
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   └── migrations/
+│   └── src/
+│       ├── routes/
+│       │   └── userRoutes.ts
+│       └── controllers/
+│           └── userController.ts
 │
 └── frontend/
-├── src/
-│ ├── App.tsx
-│ ├── types/
-│ │ ├── user.ts
-│ │ └── api/userApi.ts
-│ └── index.css
-└── vite.config.ts
+    ├── src/
+    │   ├── App.tsx
+    │   ├── types/
+    │   │   ├── user.ts
+    │   │   └── api/userApi.ts
+    │   └── index.css
+    └── vite.config.ts
+```
 
-🚀 Getting Started
-1️⃣ Backend Setup (Express + Prisma)
-Install dependencies
+---
+
+# 🚀 Getting Started
+
+## 1️⃣ Backend Setup (Express + Prisma)
+
+### **Install dependencies**
+
+```bash
 cd backend
 npm install
+```
 
-Configure PostgreSQL
+### **Configure PostgreSQL**
 
-Create a .env file:
+Create a `.env` file:
 
+```
 DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/DATABASE"
+```
 
-Prisma Setup
+### **Prisma Setup**
+
+```bash
 npx prisma migrate dev
 npx prisma generate
+```
 
-Start backend
+### **Start backend**
+
+```bash
 npm run dev
+```
 
 Running at:
 
+```
 http://localhost:3000
+```
 
-2️⃣ Frontend Setup (React + TailwindCSS)
-Install dependencies
+---
+
+## 2️⃣ Frontend Setup (React + TailwindCSS)
+
+### Install dependencies
+
+```bash
 cd frontend
 npm install
+```
 
-Start frontend
+### Start frontend
+
+```bash
 npm run dev
+```
 
 Running at:
 
+```
 http://localhost:5173
+```
 
-🔌 API Endpoints (REST)
-Method Endpoint Description Body
-GET /users Get all users —
-POST /users Create new user { name, email, age, isMarried, sport }
-PUT /users/:id Update a specific user Partial user body
-DELETE /users/:id Delete a specific user —
-User Model
+---
+
+# 🔌 API Endpoints (REST)
+
+| Method | Endpoint     | Description            | Body                                     |
+| ------ | ------------ | ---------------------- | ---------------------------------------- |
+| GET    | `/users`     | Get all users          | —                                        |
+| POST   | `/users`     | Create new user        | `{ name, email, age, isMarried, sport }` |
+| PUT    | `/users/:id` | Update a specific user | Partial user body                        |
+| DELETE | `/users/:id` | Delete a specific user | —                                        |
+
+### **User Model**
+
+```ts
 {
-id: number
-name: string
-email: string
-age: number
-isMarried: boolean
-sport: string
+  id: number;
+  name: string;
+  email: string;
+  age: number;
+  isMarried: boolean;
+  sport: string;
 }
+```
 
-🧱 Database Schema (Prisma)
+---
+
+# 🧱 Database Schema (Prisma)
+
+```prisma
 model User {
-id Int @id @default(autoincrement())
-name String
-email String @unique
-age Int
-isMarried Boolean
-sport String
+  id        Int     @id @default(autoincrement())
+  name      String
+  email     String  @unique
+  age       Int
+  isMarried Boolean
+  sport     String
 }
+```
 
-🧩 Architecture Diagram
-┌──────────────────┐ HTTP REST ┌──────────────────┐
-│ Frontend │ ─────────────────────> │ Express API │
-│ React + Tailwind │ │ /users endpoints │
+---
+
+# 🧩 Architecture Diagram
+
+```
+┌──────────────────┐        HTTP REST        ┌──────────────────┐
+│     Frontend     │  ─────────────────────> │     Express API  │
+│ React + Tailwind │                         │  /users endpoints│
 └──────────────────┘ <────────────────────── └──────────────────┘
-▲ │
-│ ▼
-│ ┌──────────────┐
-│ Prisma Client (Type-safe) │ PostgreSQL │
-└────────────────────────────────────│ DB │
-└──────────────┘
+        ▲                                          │
+        │                                          ▼
+        │        Prisma Client (Type-safe)   ┌──────────────┐
+        └────────────────────────────────────│   PostgreSQL │
+                                             │     DB       │
+                                             └──────────────┘
+```
 
-🧪 Example Requests
-Create a user
+---
+
+# 🧪 Example Requests
+
+### Create a user
+
+```json
 POST /users
 {
-"name": "Jane",
-"email": "jane@example.com",
-"age": 28,
-"isMarried": false,
-"sport": "running"
+  "name": "Jane",
+  "email": "jane@example.com",
+  "age": 28,
+  "isMarried": false,
+  "sport": "running"
 }
+```
 
-Update a user
+### Update a user
+
+```json
 PUT /users/1
 {
-"sport": "swimming",
-"isMarried": true
+  "sport": "swimming",
+  "isMarried": true
 }
+```
 
-Delete a user
+### Delete a user
+
+```
 DELETE /users/1
+```
 
-🛠️ Troubleshooting
-❗ Updates not syncing to Prisma
+---
+
+# 🛠️ Troubleshooting
+
+### ❗ Updates not syncing to Prisma
 
 Make sure:
 
-1. Backend route uses correct path:
-   router.put("/:id", updateUser);
+1. Backend route path is correct:
 
-2. Body is passed to Prisma:
-   prisma.user.update({
-   where: { id },
-   data: req.body
-   });
+```ts
+router.put("/:id", updateUser);
+```
 
-3. You convert age string → number:
-   age: Number(editingForm.age)
+2. Your controller updates fields:
 
-4. You restart backend after changes:
-   Ctrl + C → npm run dev
+```ts
+prisma.user.update({
+  where: { id },
+  data: req.body,
+});
+```
 
-5. Check Network tab:
+3. Age is converted properly:
 
-200 OK = backend succeeded
+```ts
+age: Number(editingForm.age);
+```
 
-500 = Prisma error
+4. Backend is restarted after edits:
 
-404 = wrong route path
+```
+Ctrl + C
+npm run dev
+```
 
-204 = no body to parse
+5. Check the browser Network tab for status codes.
